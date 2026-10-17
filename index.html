@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Iron Wastes — Pre-Beta</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="game"></div>
+
+  <div id="hud" class="hidden">
+    <div class="hud-panel left">
+      <div class="panel-title">СОСТОЯНИЕ ЛОКОМОТИВА</div>
+      <div class="stat"><span>ПРОЙДЕНО</span><strong id="distance">0.0 КМ</strong></div>
+      <div class="stat"><span>КРЕДИТЫ</span><strong id="money">0</strong></div>
+      <div class="stat time-stat"><span>ВРЕМЯ</span><strong><b id="dayPhase">ДЕНЬ</b> <small id="dayTime">17:20</small></strong></div>
+      <div class="stat"><span>ЗДОРОВЬЕ</span><strong id="hp">100</strong></div>
+      <div class="meter"><i id="hpBar"></i></div>
+      <div class="stat"><span>ПРОЧНОСТЬ ПОЕЗДА</span><strong id="integrity">100%</strong></div>
+      <div class="meter"><i id="integrityBar"></i></div>
+      <div class="stat"><span>УГОЛЬ / ТОПКА</span><strong id="coal">0</strong></div>
+      <div class="stat"><span>ДАВЛЕНИЕ ПАРА</span><strong id="steam">0%</strong></div>
+      <div class="stat"><span>СОСТОЯНИЕ ПАРА</span><strong id="steamState">НОРМА</strong></div>
+      <div class="meter"><i id="steamBar"></i></div>
+      <div class="stat"><span>СКОРОСТЬ ПОЕЗДА</span><strong id="speed">0</strong></div>
+      <div class="stat"><span>ТЯГА</span><strong id="throttle">0%</strong></div>
+      <div class="stat"><span>ТОРМОЗ</span><strong id="brake">ВКЛЮЧЁН</strong></div>
+      <div class="stat"><span>ОРУЖИЕ</span><strong id="weaponName">ЛОПАТА</strong></div>
+      <div class="stat"><span>ПАТРОНЫ</span><strong id="ammo">—</strong></div>
+    </div>
+
+    <div class="hud-panel right" id="inventory">
+      <div class="panel-title">ГРУЗ / ИНВЕНТАРЬ</div>
+      <div class="stat"><span>В РУКАХ</span><strong id="heldItem">ПУСТО</strong></div>
+      <div class="stat"><span>Уголь</span><strong id="invCoal">0</strong></div>
+      <div class="stat"><span>Металлолом</span><strong id="invScrap">0</strong></div>
+      <div class="stat"><span>Аптечки</span><strong id="invMedkit">0</strong></div>
+      <div class="stat"><span>ФОНАРЬ</span><strong id="flashlight">ВЫКЛ</strong></div>
+    </div>
+
+    <div id="objectivePanel" class="objective-panel hidden">
+      <div class="objective-label">ЦЕЛЬ</div>
+      <div id="objectiveText" class="objective-text">Получите дорожное снабжение</div>
+      <div class="objective-meta"><span id="objectiveDistance"></span><span id="objectiveHint"></span></div>
+    </div>
+
+    <div id="introBanner" class="intro-banner hidden">
+      <div><strong id="introTitle">СТАРТОВЫЙ ПОРТ</strong><span id="introKm">0 КМ</span></div>
+      <p id="introText">Получите дорожные кредиты и подготовьте локомотив.</p>
+    </div>
+
+    <div id="warning"></div>
+    <div id="interaction"></div>
+    <div id="crosshair">+</div>
+    <div id="damageFlash"></div>
+    <div id="classEffectFlash"></div>
+    <div id="classStatus"></div>
+  </div>
+
+  <div id="atmosphereOverlay" aria-hidden="true"></div>
+  <div id="toast"></div>
+
+  <div id="startScreen" class="menu-screen">
+    <div class="menu-panel" id="mainMenuPanel">
+      <div class="menu-scratch" aria-hidden="true"></div>
+      <div class="iw-logo"><span class="iw-logo-mark">⚙</span><strong>IRON</strong><strong>WASTES</strong><small>PRE-BETA</small></div>
+      <nav class="main-menu-nav" aria-label="Главное меню">
+        <button id="continueButton" class="menu-link" disabled>ПРОДОЛЖИТЬ</button>
+        <button id="newGameButton" class="menu-link">НОВАЯ ИГРА</button>
+        <button id="classesButton" class="menu-link">КЛАССЫ <span id="menuMarksBadge">0 МАРОК</span></button>
+        <button id="settingsButton" class="menu-link">НАСТРОЙКИ</button>
+        <button id="aboutButton" class="menu-link">ОБ ИГРЕ</button>
+        <button id="exitButton" class="menu-link">ВЫХОД</button>
+      </nav>
+      <div class="menu-footer"><span>IRON WASTES // EXPEDITION BUILD</span><span id="menuSelectedSummary">МАШИНИСТ · НОРМАЛЬНАЯ</span></div>
+    </div>
+
+    <section id="newGamePanel" class="menu-subpanel hidden">
+      <div class="subpanel-head"><button class="menu-back" data-menu-back>← НАЗАД</button><div><span>НОВАЯ ЭКСПЕДИЦИЯ</span><h2>ПОДГОТОВКА МАРШРУТА</h2></div></div>
+      <div class="newgame-grid">
+        <div class="newgame-column">
+          <div class="menu-section-title">КЛАСС</div>
+          <div id="selectedClassCard" class="selected-class-card"></div>
+          <button id="openClassesFromNewGame" class="metal-button secondary">ВЫБРАТЬ ДРУГОЙ КЛАСС</button>
+        </div>
+        <div class="newgame-column">
+          <div class="menu-section-title">СЛОЖНОСТЬ</div>
+          <div class="difficulty-buttons menu-difficulties">
+            <button type="button" class="difficulty-btn" data-difficulty="easy"><span class="difficulty-icon">◇</span><strong>ЛЁГКАЯ</strong><small>Больше ресурсов, слабее автоматы</small></button>
+            <button type="button" class="difficulty-btn active" data-difficulty="normal"><span class="difficulty-icon">⚙</span><strong>НОРМАЛЬНАЯ</strong><small>Рекомендуемый баланс Iron Wastes</small></button>
+            <button type="button" class="difficulty-btn" data-difficulty="hard"><span class="difficulty-icon">☠</span><strong>ТЯЖЁЛАЯ</strong><small>Меньше ресурсов, опаснее ночь</small></button>
+          </div>
+          <p id="difficultyDescription" class="difficulty-description"></p>
+        </div>
+      </div>
+      <label id="skipIntroRow" class="skip-intro-row hidden"><input id="skipIntroCheckbox" type="checkbox"><span>ПРОПУСТИТЬ ВСТУПЛЕНИЕ</span></label>
+      <button id="startButton" class="metal-button primary start-expedition">НАЧАТЬ ЭКСПЕДИЦИЮ</button>
+    </section>
+
+    <section id="classesPanel" class="menu-subpanel hidden">
+      <div class="subpanel-head"><button class="menu-back" data-menu-back>← НАЗАД</button><div><span>МАГАЗИН КЛАССОВ</span><h2>СПЕЦИАЛИЗАЦИЯ ЭКСПЕДИЦИИ</h2></div><strong id="classMarks">0 МАРОК</strong></div>
+      <p class="subpanel-copy">Марки — отдельная постоянная валюта меню и не связаны с кредитами внутри маршрута. Купленный класс остаётся доступным в следующих запусках.</p>
+      <div id="classCards" class="class-grid"></div>
+    </section>
+
+    <section id="settingsPanel" class="menu-subpanel compact hidden">
+      <div class="subpanel-head"><button class="menu-back" data-menu-back>← НАЗАД</button><div><span>НАСТРОЙКИ</span><h2>ВИЗУАЛ И ИНТЕРФЕЙС</h2></div></div>
+      <div class="setting-row"><div><strong>КИНЕМАТОГРАФИЧЕСКАЯ КАМЕРА МЕНЮ</strong><small>Очень медленное движение камеры вокруг локомотива.</small></div><button id="cinematicToggle" class="metal-button secondary">ВКЛ</button></div>
+      <div class="setting-row"><div><strong>ЭКРАННОЕ ЗЕРНО</strong><small>Слабая индустриальная текстура поверх изображения.</small></div><button id="grainToggle" class="metal-button secondary">ВКЛ</button></div>
+      <div class="setting-note">Качество теней и освещения продолжает выбираться автоматически под устройство.</div>
+    </section>
+
+    <section id="aboutPanel" class="menu-subpanel compact hidden">
+      <div class="subpanel-head"><button class="menu-back" data-menu-back>← НАЗАД</button><div><span>ОБ ИГРЕ</span><h2>IRON WASTES</h2></div></div>
+      <p class="about-copy">Индустриальная железнодорожная пустошь. Подготовьте паровоз, управляйте давлением и топливом, исследуйте заброшенные поселения и пройдите маршрут через пять железнодорожных портов.</p>
+      <div class="about-stamp">40 КМ // PRE-BETA ROUTE</div>
+      <button id="replayIntroButton" class="metal-button secondary replay-intro">ПОВТОРИТЬ ВСТУПЛЕНИЕ</button>
+    </section>
+  </div>
+
+
+
+  <div id="introCutscene" class="intro-cutscene hidden" aria-hidden="true">
+    <div class="intro-letterbox intro-letterbox-top"></div>
+    <div class="intro-letterbox intro-letterbox-bottom"></div>
+    <div id="introFade" class="intro-fade"></div>
+    <div id="introCinematicMeta" class="intro-cinematic-meta"></div>
+    <div id="introCinematicTitle" class="intro-cinematic-title"></div>
+    <div id="introSubtitle" class="intro-subtitle"></div>
+    <div class="intro-skip"><span>[SPACE] УДЕРЖИВАТЬ — ПРОПУСТИТЬ</span><i id="introSkipProgress"></i></div>
+  </div>
+
+
+  <div id="shopScreen" class="shop-screen hidden">
+    <div class="shop-card">
+      <div class="eyebrow">ТОРГОВАЯ СТОЙКА</div>
+      <div class="shop-head"><h2 id="shopTitle">МАГАЗИН</h2><strong id="shopMoney">0 КР.</strong></div>
+      <div id="shopItems"></div>
+      <button id="shopClose">ЗАКРЫТЬ</button>
+    </div>
+  </div>
+
+  <div id="deathScreen" class="screen hidden">
+    <div class="card danger">
+      <h1>ВЫ ПОГИБЛИ</h1>
+      <button class="restartButton">НАЧАТЬ ЗАНОВО</button>
+    </div>
+  </div>
+
+
+  <div id="trainDestroyedScreen" class="screen hidden">
+    <div class="card danger">
+      <div class="eyebrow">АВАРИЯ ЛОКОМОТИВА</div>
+      <h1>ПОЕЗД УНИЧТОЖЕН</h1>
+      <p>Локомотив больше не может продолжать путь. Начните заново и следите за прочностью поезда.</p>
+      <button class="restartButton">НАЧАТЬ ЗАНОВО</button>
+    </div>
+  </div>
+
+  <div id="completeScreen" class="screen hidden">
+    <div class="card complete">
+      <div class="eyebrow">КОНЕЦ ТЕКУЩЕЙ ВЕРСИИ</div>
+      <h1>МАРШРУТ ПРОЙДЕН</h1>
+      <p>Вы добрались до промышленного порта на отметке 40 км. Конец текущей Pre-Beta версии.</p>
+      <button class="restartButton">СЫГРАТЬ ЕЩЁ РАЗ</button>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const sources = [
+        'https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js',
+        'Effects.js', 'Weather.js', 'DayNight.js', 'Collision.js', 'UI.js', 'Items.js',
+        'Enemy.js', 'Train.js', 'Player.js', 'Economy.js', 'Tutorial.js', 'WorldPOI.js', 'WorldArt.js', 'Difficulty.js', 'ClassSystem.js', 'CinematicAssets.js', 'IntroCutscene.js', 'EndCutscene.js', 'Performance.js', 'main.js'
+      ];
+
+      const card = document.querySelector('#startScreen .menu-panel') || document.getElementById('startScreen');
+      if (location.protocol === 'file:') {
+        card.innerHTML = `
+          <div class="eyebrow">НЕВЕРНЫЙ СПОСОБ ЗАПУСКА</div>
+          <h1>IRON WASTES</h1>
+          <p><strong>Игра открыта через file://.</strong></p>
+          <p>Полностью распакуйте ZIP-архив в обычную папку и запустите <strong>START_GAME.bat</strong>.</p>
+          <p>Не открывайте index.html прямо из WinRAR — браузер блокирует часть игровых функций для временных file:// адресов.</p>`;
+        return;
+      }
+
+      let index = 0;
+      const loadNext = () => {
+        if (index >= sources.length) return;
+        const src = sources[index++];
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = loadNext;
+        script.onerror = () => {
+          card.innerHTML = `
+            <div class="eyebrow">ОШИБКА ЗАГРУЗКИ</div>
+            <h1>IRON WASTES</h1>
+            <p>Не удалось загрузить файл: <strong>${src}</strong>.</p>
+            <p>Проверьте подключение к интернету и запустите игру ещё раз через START_GAME.bat.</p>`;
+        };
+        document.body.appendChild(script);
+      };
+      loadNext();
+    })();
+  </script>
+</body>
+</html>
